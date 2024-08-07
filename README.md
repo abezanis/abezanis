@@ -4,7 +4,7 @@
 - ⚡ Fun fact: I have always had a big passion for statistics (since freshman year of highschool) and throughout my college time I have really enjoy coding projects.
 - I have learned many coding languages including: python, R, c/c++, SQL, Java, Clsip, and Prolog. Learing a new coding language has always been a fun time!
 - You can reach me at my email: bezanisalena@gmail.com
-- 
+  
 
 <!---
 abezanis/abezanis is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
