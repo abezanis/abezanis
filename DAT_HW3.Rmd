@@ -1,0 +1,198 @@
+---
+title: "Linear Regression"
+output: ioslides_presentation
+author: "Alena Bezanis"
+date: "2024-03-19"
+---
+
+<style type="text/css">
+body p, div, h1, h2, h3, h4, h5 {
+color: black;
+font-family: Modern Computer Roman;
+}
+slides > slide.title-slide hgroup h1 {
+color: darkblue
+}
+h2 {
+color: darkred
+}
+</style> <!-- end of defining font in various parts of slides -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning=FALSE)
+library(ggplot2)
+library(plotly)
+```
+
+## What is Linear Regression?  
+
+- Statistical model to represent/estimate relationship between one or more variables 
+- Can take unknown dependent variable and predict it by using the known independent variable 
+
+How does this relate to Data Science?
+
+We can use a combination of statistics and coding to calculate linear regression to predict useful information, given what we already know. 
+
+Examples:
+
+- using rainfall to predict soil erosion
+- using age to predict income 
+- using height to predict weight
+
+
+## The General Math
+Linear Regression:
+
+$Y = a + bx$
+
+Y is the dependent variable, X is the independent variable, b is the estimated slope, and a is the estimated intercept.
+
+$a = \frac{(\sum y)(\sum x^{2}) - (\sum y)(\sum xy)}{n(\sum x^{2}) - (\sum x^{2})}$
+
+$b = \frac{n(\sum xy) - (\sum x)(\sum y)}{n(\sum x^{2}) - (\sum x^{2})}$
+
+This is the equation we can use to predict data. 
+
+
+## Scatter Plots
+```{css}
+p {
+  font-size: 70%; 
+}
+```
+
+Let look at a visual representation of Linear Regression:
+
+```{r, out.width="65%", out.height="60%"}
+set.seed(123)
+height <- seq(150, 200, by = 1)
+weight <- 0.6 * height + rnorm(length(height), mean = 0, sd = 5)
+data <- data.frame(y=weight,
+                   x=height)
+model <- lm(weight ~ height)
+
+ggplot(data, aes(height, weight)) + geom_point() + 
+  geom_smooth(method='lm', se=FALSE, color='red', show.legend = FALSE) +
+  theme_minimal() +
+  labs(x='Height (cm)', y='Weight (kg)', title='Height vs Weight') +
+  theme(plot.title = element_text(hjust=0.5, size=20, face='bold')) 
+
+```
+
+This is a scatter plot, so you can visually see all the given data. The red line is the positive linear relationship. We can see the line predict data points that are not there. Scatter plots are the best way to plot the data and linear regression together, to get a visual representation. 
+
+## The Code
+
+Now lets break down the code so you understand how this graph is possible  
+
+```{r echo =TRUE, fig.show='hide', out.width="40%", out.height="40%"}
+# we are using a ggplot to make a scatter plot
+# the data is set with x(height) and y (weight)
+ggplot(data, aes(height, weight)) + 
+  
+#geom_point() add the points to the graph
+  geom_point() + 
+  
+#this line of code adds the linear regression model
+  geom_smooth(method='lm', se=FALSE, color='red') +
+  
+# the rest of the code helps with formatting how we want our graph to look 
+  theme_minimal() +
+  labs(x='Height (cm)', y='Weight (kg)', title='Height vs Weight') +
+  theme(plot.title = element_text(hjust=0.5, size=20, face='bold')) 
+```
+
+
+## Code to get the Linear Regression model 
+
+Now, you might be wondering "how did we get the red line?"
+
+We used the code 
+```{r echo =TRUE, fig.show='hide'}
+model <- lm(weight ~ height)
+coefficients <- coef(model)
+intercept <- coefficients[1]
+slope <- coefficients[2]
+```
+The lm() function takes the data in Y, "weight" as the dependent variable and the data from X, "height", as the independent variable. Then we can use coef() to get the coefficients of the equation, from the vector. This is how we can get linear regression model using code. 
+
+## The Math Behind the Code
+
+Now to relate that code to the Equations from before:
+
+$Y$ is the dependent variable, weight
+
+$X$ is the independent variable, height
+
+$a$ is the intercept found from the first value in the coefficient vector, which is the value of weight, when height is zero
+
+$b$ is the slope found from the second value, which is the change in weight for one-unit change in height
+
+This gives us all the pieces to create the equation:
+
+weight = intercept + slope*height
+
+$Y = a + bx$
+
+The code does the math for you!
+
+## Negtiave linear regression?
+```{css}
+p {
+  font-size: 80%; 
+}
+```
+
+To give you another example here is a graph that looks a little different.
+
+```{r, out.width="70%", out.height="70%"}
+set.seed(123)
+age <- seq(20, 60, by = 1)
+reaction_time <- -0.05 * age + rnorm(length(age), mean = 0, sd = 0.5)
+model <- lm(reaction_time ~ age)
+data <- data.frame(y=reaction_time,
+                   x=age)
+ggplot(data, aes(age, reaction_time)) + geom_point() + geom_smooth(method='lm', se=FALSE, color='red') +
+  theme_minimal() +
+  labs(x='Height (cm)', y='Weight (kg)', title='Height vs Weight') +
+  theme(plot.title = element_text(hjust=0.5, size=20, face='bold')) 
+```
+
+This is an example of a data set with a negative regression line. That means as the independent variable (age) increases, the dependent variable (reaction time) decreases. 
+
+## Ploty Graph
+```{css}
+p {
+  font-size: 70%; 
+}
+```
+To allow you to explore the data along with the re regression line, here is an interactive ploty graph. The Blue data points are the actual data we have, while the orange points are points on the red linear regression line that predicts data.
+
+```{r, out.width="100%", out.height="20%", warn = -1, message = FALSE}
+
+    set.seed(123)
+    h <- seq(150, 200, by = 1)
+    w <- 0.6 * h + rnorm(length(h), mean = 0, sd = 5)
+    model <- lm(w ~ h)
+    
+    fig <- plot_ly(data=iris, x = ~h, y = ~w,
+                   marker = list(size = 7))
+                                 
+    fig <- fig %>% layout(title = 'Height vs Weight',
+             yaxis = list(zeroline = FALSE),
+             xaxis = list(zeroline = FALSE))
+    fig <- fig %>% add_trace(type = 'scatter', mode = 'markers',
+                             x = ~h, y = ~w,
+                             marker = list(color = 'blue'), 
+                             name = 'Data')
+    
+    fig <- fig %>% add_trace(type = 'scatter', mode = 'lines', 
+                             x = h, y = predict(model), 
+                             line = list(color = 'red', width = 3), 
+                             marker = list(size = 5),
+                             name = 'Linear Regression Line')
+    
+    fig
+
+```
