@@ -1,0 +1,428 @@
+---
+title: "DAT Project 1"
+author: "Josie and Alena"
+date: "2024-03-22"
+output: ioslides_presentation
+---
+
+<style type="text/css">
+body p, div, h1, h2, h3, h4, h5 {
+color: black;
+font-family: Modern Computer Roman;
+}
+slides > slide.title-slide hgroup h1 {
+color: darkblue
+}
+h2 {
+color: darkred
+}
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Importing The Data and Libraries 
+```{r, echo=TRUE, message = FALSE}
+## Libraries to clean, process, and graph the data
+library(ggplot2)
+library(data.table)
+library(reshape2)
+library(dplyr)
+library(tidyr)
+
+#importing the data
+library(readr)
+UScereal <- read_csv("UScereal.csv")
+```
+
+## Data Overview {.smaller}
+This is a set of data with the nutrition facts and marketing of different cereals in the US. 
+
+There are 11 columns:
+
+- mfr = Manufacturer
+- calories
+- protein 
+- fat
+- sodium
+- fibre
+- carbo = Carbohydrates 
+- sugars
+- shelf = counting from the floor which display shelf it is on
+- potassium
+- vitamins
+
+## Objective
+Our objective is to compare the nutritional value of different cereal brands in the US and attempt to determine if certain brands are healthier than others. 
+
+- What are the averages of calories, protein, and sugar for each brand?
+- Compare the different categories of vitamins between the different brands. 
+
+## Cleaning the Data {.smaller}
+First, we checked for any missing data values and there are no missing data values, so we can continue to clean up our data. Then viewed summary and  see that the manufacturer and vitamins are represented by characters.
+
+```{r}
+summary(UScereal)
+```
+
+## Data Pre-Processing (Vitamins)
+
+We want to convert the vitamins data into columns with binary that identify whether or not the cereal includes the specific vitamin, so we can use the vitamin data in a numerical way. 
+
+```{r, echo = TRUE}
+
+UScereal2 <- UScereal %>%
+  mutate(
+    enriched = ifelse(vitamins == "enriched", 1, 0),
+    `100%` = ifelse(vitamins == "100%", 1, 0),
+        none = ifelse(vitamins == "none", 1, 0)
+ ) %>%
+ select(-vitamins) 
+
+```
+
+## Data Pre-Processing (Brand)
+Now we want to convert the manufacturer data into columns with binary numbers that identify whether or not the cereal is the the specific brand, so we can use the manufacturer data in a numerical way. 
+```{r, echo=TRUE}
+UScereal3 <- UScereal2 %>%
+  mutate(
+    "General Mills" = ifelse(mfr == "G", 1, 0),
+    Kelloggs = ifelse(mfr == "K", 1, 0),
+        Nabisco = ifelse(mfr == "N", 1, 0),
+        Post = ifelse(mfr == "P", 1, 0),
+        "Quaker Oats" = ifelse(mfr == "Q", 1, 0),
+        "Ralston Purina" = ifelse(mfr == "R", 1, 0)
+    
+ ) %>%
+ select(-mfr) 
+
+```
+
+## Data Exploration and Visualization 
+1) To explore the data we first decided to cluster the data to better understand their relationships.
+
+2) Then we created different graphs to visualize the averages of calories, sugars, and protein.
+
+3) Finally we created bar graphs to visualize and analyze the different vitamin amounts in each manufacturer.
+
+
+## Clustering the Data {.smaller}
+Using the elbow method we clustered the data, the values in each cell represent the average value of that variable within the corresponding cluster. Understanding the characteristics of each cluster helps us identify relationships between the variables. 
+```{r}
+clustering_data <- UScereal3[, c("General Mills", "Kelloggs", "Nabisco", "Post", "Quaker Oats", "Ralston Purina", 
+                                "calories", "protein", "fat", "sodium", "fibre", "carbo", "sugars", "shelf", 
+                                "potassium", "100%", "none", "enriched")]
+scaled_data <- scale(clustering_data)
+k <- 3 
+set.seed(123)
+cluster <- kmeans(scaled_data, centers = k)
+UScereal3$cluster <- cluster$cluster
+cluster$centers
+
+```
+## Clustering Visualization
+Looking at the PCA plot of the clusters we can visual how close of a relationship each cluster has. We can see cluster 2 is a much larger cluster in comparison to the others. Also, cluster 2 and 3 variables have relatively stronger relationship then cluster one, because cluster one's points are more spread out. 
+
+```{r, out.width="70%", out.height="70%"}
+pca_data <- prcomp(UScereal3[, c("General Mills", "Kelloggs", "Nabisco", "Post", "Quaker Oats", "Ralston Purina", 
+                                 "calories", "protein", "fat", "sodium", "fibre", "carbo", "sugars", "shelf", 
+                                 "potassium", "100%", "none", "enriched")])
+pca_df <- as.data.frame(pca_data$x[, 1:2])
+pca_df$cluster <- as.factor(UScereal3$cluster)
+pca_plot <- ggplot(pca_df, aes(x = PC1, y = PC2, color = cluster)) +
+  geom_point(size = 3) +
+  scale_color_brewer(palette = "Set1") +
+  labs(x = "Principal Component 1", y = "Principal Component 2", title = "Clustering Results (PCA)")
+print(pca_plot)
+
+
+```
+
+## Cluster One {.smaller}
+Cluster one was the red dots on the graph, looking at the numerical data of cluster one we identified 3 brands that had a positive values, meaning they have an association with the cereals in the cluster. 
+
+The manufacturers in cluster one:
+
+- Kelloggs
+- Post
+- Nabisco 
+
+Calories had a value of 1.4685082, meaning cereals in this cluster tend to have a highers calories content. Protein had a value of 2.7915122, so cereals in this cluster tend to have more protein. Sugars had a value of 0.2197838, so this cluster has a tendency to have more sugar. 
+
+Meaning Kellogs, Post, and Nabisco could tend to have more calories, protein, and sugar. Though this Cluster was very small, so it is less likely to show us accurate associations. 
+
+
+## Cluster Two
+Cluster Two was the blue dots on the graph, looking at the numerical data of cluster one we identified 3 brands that had a positive values, meaning they have an association with the cereals in the cluster.
+
+The manufacturers in cluster two:
+
+- General Mills
+- Ralston Purina
+- Nabisco
+
+Calories had a value of -0.49565134, so these cereals tend to have less calories. Protein had a value of -0.4843893, so they also tend to have less protein. As well as less sugar because sugar had a value of -0.3361542. 
+
+These manufactures could be healthier because they could tend to have less calories and sugar, but they lack protein. 
+
+
+## Cluster Three
+Cluster three was the green dots on the graph, looking at the numerical data of cluster one we identified 3 brands that had a positive values, meaning they have an association with the cereals in the cluster.
+
+The manufacturers in cluster three:
+
+- Kelloggs
+- Quaker Oats
+- Post
+
+Calories had a value of 0.7864906, so these cereals tend to have more calories. Protein had a value of 0.4830686, so they also tend to have more protein. Sugar had a value of 0.6968073, so more sugar. 
+
+These brands could tend to have more sugar and calories, but could have more protein. 
+
+## Calories by Pie Chart
+Looking at the pie chart each color is a different brand, but we can see this is not an effective way to understand the difference in nutritional value between the brands. It is difficult to compare the size difference between the slices in the chart. In this case we do not want proportions of the calories as a whole, but rather compare the brand's averages, so in this context a pie chart is an insufficient way to analyze the data. 
+
+```{r, out.width="65%", out.height="60%"}
+calories_data <- UScereal[, c("mfr", "calories")]
+calories_summary <- aggregate(calories ~ mfr, data = calories_data, FUN = mean)
+calories_summary <- calories_summary[order(calories_summary$calories, decreasing = TRUE), ]
+pie_chart <- ggplot(calories_summary, aes(x = "", y = calories, fill = mfr)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +  
+  labs(title = "Distribution of Calories by Cereal Brand") +
+  theme(legend.position = "right")
+print(pie_chart)
+
+```
+
+## Calories {.smaller}
+
+```{r, out.width="65%", out.height="65%"}
+brand_calories <- sapply(c("General Mills", "Kelloggs", "Nabisco", "Post", "Quaker Oats", "Ralston Purina"), function(mfr) {
+  mean(UScereal3[UScereal3[, mfr] == 1, ]$calories, na.rm = TRUE)
+})
+
+barplot(brand_calories, 
+        main = "Average Calories by Cereal Brands", 
+        xlab = "Brand", 
+        ylab = "Average Calories",
+        col = c("skyblue1", "skyblue4", "skyblue2", "skyblue3"),
+        names.arg = c("General Mills", "Kelloggs", "Nabisco", "Post", "Quaker Oats", "Ralston Purina"),
+        cex.names = 0.6)
+```
+
+```{r}
+cat("Average Calories of Cereal Brands:\n")
+for (i in 1:length(brand_calories)) {
+  cat(names(brand_calories)[i], ": ", round(brand_calories[i], 2), "\n")
+}
+```
+
+
+## Protien {.smaller}
+
+```{r, out.width="65%", out.height="65%"}
+brand_protein <- sapply(c("General Mills", "Kelloggs", "Nabisco", "Post", "Quaker Oats", "Ralston Purina"), function(mfr) {
+  mean(UScereal3[UScereal3[, mfr] == 1, ]$protein, na.rm = TRUE)
+})
+
+barplot(brand_protein, 
+        main = "Average Amout of Protein by Cereal Brands", 
+        xlab = "Brand", 
+        ylab = "Average Protein",
+        col = c("purple4","purple1"),
+        ylim = c(0, 10),
+        names.arg = c("General Mills", "Kelloggs", "Nabisco", "Post", "Quaker Oats", "Ralston Purina"),
+        cex.names = 0.6)
+```
+
+```{r}
+cat("Average Amout of Protein by Cereal Brands:\n")
+for (i in 1:length(brand_protein)) {
+  cat(names(brand_protein)[i], ": ", round(brand_protein[i], 2), "\n")
+}
+```
+
+## Sugars {.smaller}
+
+```{r, out.width="65%", out.height="65%"}
+brand_sugars <- sapply(c("General Mills", "Kelloggs", "Nabisco", "Post", "Quaker Oats", "Ralston Purina"), function(mfr) {
+  mean(UScereal3[UScereal3[, mfr] == 1, ]$sugars, na.rm = TRUE)
+})
+
+barplot(brand_sugars, 
+        main = "Average Sugars by Cereal Brands", 
+        xlab = "Brand", 
+        ylab = "Average Sugars",
+        col = c("red1", "red4", "red2", "red3"),
+        names.arg = c("General Mills", "Kelloggs", "Nabisco", "Post", "Quaker Oats", "Ralston Purina"),
+        cex.names = 0.6)
+```
+
+```{r}
+cat("Average Sugars by Cereal Brands:\n")
+for (i in 1:length(brand_sugars)) {
+  cat(names(brand_sugars)[i], ": ", round(brand_sugars[i], 2), "\n")
+}
+```
+
+##  Nutrition Analysis
+After looking at the calories bar graphs we identified, Ralston Purina as the brand that's average had the least amount of calories, with the average being 124.85.
+
+The protein bar graph showed us Nabisco had the most average protein of 7.03.
+
+Looking at the sugars, Ralston Purina had the smallest average of 4.97 and Nabisco had the second smallest average of sugar in their cereals, with an average of 6.06. 
+
+Comparing calories, sugar, and protein averages, the healthiest brands would be Ralston Purina and Nabisco. 
+
+## The Three Vitamin Categories
+
+- Enriched: synthetically added vitamins
+- 100%: fulfills daily vitamin needs
+- None: No vitamins
+
+## Overview
+```{r, echo=TRUE}
+sub2 = subset(UScereal3, select=c("General Mills", "Kelloggs", 
+"Nabisco", "Post", "Quaker Oats", "Ralston Purina", "enriched",
+"100%", "none"))
+brands <- c("General Mills", "Kelloggs", "Nabisco", "Post",
+        "Quaker Oats", "Ralston Purina")
+V <- sapply(brands, function(vitamins) {
+  colSums(sub2[sub2[, vitamins] == 1, c("enriched", "100%",
+  "none")], na.rm=TRUE)})
+V
+```
+## Overview
+```{r}
+barplot(V, 
+        xlab = "Brands",
+        ylab = "Number Cereals per Vitamin Type",
+        main = "Brands and their Cereals by Vitamin Type",
+        col = c("plum", "purple", "darkorchid4", "pink", "red",
+"hotpink","blue", "lightblue", "darkblue", "lightgreen", "green",
+"darkgreen","lightyellow", "yellow", "gold2", "orange",
+"darkorange", "darkorange3"), beside=TRUE)
+
+legend("topright", legend = c("General Mills", "Kelloggs",
+          "Nabisco", "Post", "Quaker Oats", "Ralston Purina"), 
+fill = c("plum", "hotpink", "darkblue", "lightgreen",
+         "lightyellow", "darkorange"), cex=0.5)
+```
+These results can be better visualized by spliting the data into three seperate graphs. 
+
+## Enriched
+```{r, echo=TRUE}
+sub1 = subset(UScereal3, select=c("General Mills", "Kelloggs",
+"Nabisco", "Post", "Quaker Oats", "Ralston Purina", "enriched",
+"100%", "none"))
+brands <- c("General Mills", "Kelloggs", "Nabisco", "Post",
+            "Quaker Oats", "Ralston Purina")
+Enr <- sapply(brands, function(vitamin) {
+  colSums(sub1[sub1[, vitamin] == 1, c("enriched")], na.rm=TRUE)})
+Enr[1:3]
+Enr[4:6]
+```
+
+## Enriched
+```{r}
+barplot(Enr,
+        xlab = "Brands",
+        ylab = "Cereals w/ Enriched Vitamins",
+        main = "Brands and their Cereals w/ Enriched Vitamins",
+        col = c("plum", "hotpink", "darkblue", "lightgreen",
+              "lightyellow", "darkorange"), beside=TRUE)
+
+legend("topright", legend = c("General Mills", "Kelloggs",
+        "Nabisco", "Post", "Quaker Oats", "Ralston Purina"), 
+fill = c("plum", "hotpink", "darkblue", "lightgreen", 
+        "lightyellow", "darkorange"), cex=0.5)
+```
+
+## 100%
+```{r, echo=TRUE}
+onehun <- sapply(brands, function(vitamin) {
+  colSums(sub1[sub1[, vitamin] == 1, c("100%")], na.rm=TRUE)})
+onehun[1:3]
+onehun[4:6]
+```
+
+## 100%
+```{r}
+barplot(onehun,
+        xlab = "Brands",
+        ylab = "Cereals w/ 100% Vitamins",
+        main = "Brands and their Cereals w/ 100% Vitamins",
+        col = c("plum", "hotpink", "darkblue", "lightgreen",
+                "lightyellow", "darkorange"), beside=TRUE)
+
+legend("topright", legend = c("General Mills", "Kelloggs",
+            "Nabisco", "Post", "Quaker Oats", "Ralston Purina"), 
+fill = c("plum", "hotpink", "darkblue", "lightgreen", 
+            "lightyellow", "darkorange"), cex=0.5)
+```
+
+## None
+```{r, echo=TRUE}
+none <- sapply(brands, function(vitamin) {
+  colSums(sub1[sub1[, vitamin] == 1, c("none")], na.rm=TRUE)
+})
+none[1:3]
+none[4:6]
+```
+
+## None
+```{r}
+barplot(none,
+        xlab = "Brands",
+        ylab = "Cereals w/ No Vitamins",
+        main = "Brands and their Cereals w/ No Vitamins",
+        col = c("plum", "hotpink", "darkblue", "lightgreen",
+              "lightyellow", "darkorange"), beside=TRUE)
+
+legend("topright", legend = c("General Mills", "Kelloggs",
+          "Nabisco", "Post", "Quaker Oats", "Ralston Purina"), 
+fill = c("plum", "hotpink", "darkblue", "lightgreen",
+          "lightyellow", "darkorange"), cex=0.5)
+```
+
+## Vitamin Analysis
+88% of cereals have enriched vitamins,  8% meet the daily vitamin recommendations, and 4% have no vitamins. 
+
+Based on the graphs, General Mills and Kellogg are the best cereals for vitamin intake. Both have 19 enriched cereals. General Mills also has 3 cereals with 100% vitamin levels and Kellogg has 2. 
+
+Nabisco would be the worst cereal for vitamin intake with only 2 having enriched vitamins and 2 having no vitamins at all.
+
+
+
+***note: enriched vitamins are considered to be beneficial for meeting daily vitamin goals and overall vitamin intake in the US.***
+
+## The Final Findings
+Ralston Purina has the least amount of calories on average.
+
+Nabisco has the most amount of protein on average. 
+
+Ralston Purina has the least sugar on average.
+
+General Mills and Kellogg have the most vitamins on average.
+
+## Conclusion
+Given the data no brand stands out as the healthiest across the four categories we analyzed. Within each category there was a front runner, but those front runners did not transfer across categories. 
+
+Nabisco, the leading brand in protein, had the lowest values of vitamins. 
+
+Similarly, General Mills and Kellogg, which were among the highest in calories and sugar, had the highest vitamin levels on average. 
+
+That said, Quaker Oats brand fell into the middle of all analyses we conducted, and as such may be considered the most well balanced of the brands. 
+
+In conclusion, certain brands lead certain nutritional categories on average, but no brand stands out as being the healthiest brand.
+
+
+## Citation
+
+Colman, David. “‘Serial Correlation or Cereal Correlation ??’” Statlib---1993 Graphics Exposition, lib.stat.cmu.edu/datasets/1993.expo/.
+
+https://lib.stat.cmu.edu/datasets/1993.expo/
+
