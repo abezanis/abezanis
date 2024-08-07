@@ -1,0 +1,15 @@
+The cereal project has three files. 
+
+Project One:
+- EDA on the different US cereals and comparing their nutrition.
+- CerealProject1.Rmd file includes the EDA and explanation as a R markdown file
+- CerealProject1.html includes the same information, but produces and html file. 
+
+Project Two:
+- EDA on the relationship between specific nutritional values in the US cereals.
+- CerrealProject2.ipynb file includes the EDA and explanation a python script. 
+
+Both project are using The nutritional and store placement data on US cereals, further desciption and where the data is pulled can be found here:
+https://lib.stat.cmu.edu/datasets/1993.expo/
+
+Though the files do explain the data, how it was cleaned, exploratory analysis, visualization, and the conclusions. 
